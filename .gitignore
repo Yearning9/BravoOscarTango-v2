@@ -127,3 +127,13 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+.idea
+__pycache__
+!/Old/BravoOscarTango.py
+!/Old/Prefixes.py
+!/Old/Old_Slash.py
+!/Old/Slash.py
+!/Utils/
+!/Private/
+!/markovbot/
