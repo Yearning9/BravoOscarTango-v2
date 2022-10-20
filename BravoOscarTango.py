@@ -5,25 +5,6 @@ from discord.ext import commands
 from discord.ext.commands import NotOwner, CommandNotFound, NoPrivateMessage
 
 
-async def get_prefix(bot_client, message):
-
-    return '/'
-
-    # if message.channel.type is discord.ChannelType.private:
-    #     return '.'
-    # else:
-    #     async with bot_client.pool.acquire() as connection:
-    #         async with connection.transaction():
-    #             prfx = await connection.fetchval("SELECT prefix FROM prefixes WHERE id_guild = $1", str(message.guild.id))
-    #
-    #             if prfx is not None:
-    #                 return str(prfx)
-    #             else:
-    #                 new_prefix = '.'
-    #                 await connection.execute(f"INSERT INTO prefixes (id_guild, prefix) VALUES ({str(message.guild.id)}, '.')")
-    #                 send_webhook(str(message.guild.name))
-    #                 return new_prefix
-
 intents = discord.Intents.default()
 
 # intents.message_content = True
@@ -49,8 +30,7 @@ async def on_ready():
 @client.command()
 @commands.is_owner()
 async def test(ctx):
-    prfx = await get_prefix(client, message=ctx.message)
-    await ctx.send(f'Startup check succesful, check console for ping, commands on {prfx}commands')
+    await ctx.send(f'Startup check succesful, check console for ping, commands on /help')
     return print(f'{round(client.latency * 1000)} ms')
 
 
@@ -109,9 +89,8 @@ async def test_error(ctx, error):
 
 @client.event
 async def on_command_error(ctx, error):
-    prfx = await get_prefix(client, message=ctx.message)
     if isinstance(error, CommandNotFound):
-        await ctx.send(f'Command does not exist, check {prfx}commands or {prfx}modcommands for a list of commands')
+        await ctx.send(f'Command does not exist, check /help for a list of commands')
     else:
         print(error)
 

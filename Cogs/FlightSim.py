@@ -149,7 +149,7 @@ class FlightSim(commands.Cog):
 
             metar.add_field(name="Humidity:", value="{}%".format(humidity))
             metar.set_thumbnail(
-                url="https://cdn.discordapp.com/attachments/651086904925749252/802617703809548298/ezgif.com-gif-maker_3.gif")
+                url="https://cdn.discordapp.com/attachments/736887056344678441/1032479805016375356/ezgif.com-gif-maker_8.gif")
             metar.set_footer(text="Observed at {}. Flight category: {}".format(obs, cond))
             if wxint > 0:
                 weather = resp["data"][0]["conditions"][0]["text"]
@@ -222,7 +222,7 @@ class FlightSim(commands.Cog):
             charts.set_footer(
                 text=f"You can also check the METAR for this airport with `/metar {icao.upper()}`")
             charts.set_thumbnail(
-                url="https://cdn.discordapp.com/attachments/651086904925749252/802617703809548298/ezgif.com-gif-maker_3.gif")
+                url="https://cdn.discordapp.com/attachments/736887056344678441/1032479805016375356/ezgif.com-gif-maker_8.gif")
             await ctx.reply(embed=charts, mention_author=False)
             return
 
@@ -356,7 +356,7 @@ class FlightSim(commands.Cog):
             colour=discord.Colour.from_rgb(97, 0, 215)
         )
         flp_embed.set_thumbnail(
-            url='https://cdn.discordapp.com/attachments/651086904925749252/802617703809548298/ezgif.com-gif-maker_3.gif')
+            url='https://cdn.discordapp.com/attachments/736887056344678441/1032479805016375356/ezgif.com-gif-maker_8.gif')
         flp_embed.add_field(name='Departure Airport:', value=dep_name)
         flp_embed.add_field(name='Arrival Airport:', value=arr_name)
         flp_embed.add_field(name='Distance / Cruise Altitude:', value=f'{dist}nm/{cr_alt}ft')
@@ -541,7 +541,7 @@ class FlightSim(commands.Cog):
             info_embed.add_field(name='METAR:', value=metar)
             info_embed.add_field(name='TAF:', value=taf)
             info_embed.set_thumbnail(
-                url='https://cdn.discordapp.com/attachments/356779184393158657/729351510974267513/plane-travel-icon-rebound2.gif')
+                url='https://cdn.discordapp.com/attachments/736887056344678441/1032479805016375356/ezgif.com-gif-maker_8.gif')
 
             info_embed.set_image(url='attachment://info_done.png')
             info_embed.set_footer(
@@ -724,45 +724,45 @@ class FlightSim(commands.Cog):
                 else:
                     i += 1
 
-            desc = f"Generated at: **{datetime.datetime.fromtimestamp(int(info['params']['time_generated'])).strftime('%H:%M %Y-%m-%d')}**  | AIRAC: **{info['params']['airac']}** | Units: **{info['params']['units']}**\n\n" \
-                   f"FL STEPS: **{info['general']['stepclimb_string']}**\n\n" \
-                   f"ROUTE: **{info['origin']['icao_code']}/{info['origin']['plan_rwy']}** {info['general']['route']} **{info['destination']['icao_code']}/{info['destination']['plan_rwy']}**"
+            desc = f'Generated at: **{datetime.datetime.fromtimestamp(int(info["params"]["time_generated"])).strftime("%H:%M %Y-%m-%d")}**  | AIRAC: **{info["params"]["airac"]}** | Units: **{info["params"]["units"]}**\n\n' \
+                   f'FL STEPS: **{info["general"]["stepclimb_string"]}**\n\n' \
+                   f'ROUTE: **{info["origin"]["icao_code"]}/{info["origin"]["plan_rwy"]}** {info["general"]["route"]} **{info["destination"]["icao_code"]}/{info["destination"]["plan_rwy"]}**'
 
-            fuel = f"TRIP           {info['fuel']['enroute_burn']}\n" \
-                   f"CONT           {info['fuel']['contingency']}\n" \
-                   f"ALTN           {info['fuel']['alternate_burn']}\n" \
-                   f"FINRES         {info['fuel']['reserve']}\n" \
-                   f"EXTRA          {info['fuel']['extra']}\n" \
-                   f"TAXI           {info['fuel']['taxi']}\n" \
-                   f"BLOCK FUEL     {info['fuel']['plan_ramp']}\n"
+            fuel = f'TRIP           {info["fuel"]["enroute_burn"]}\n' \
+                   f'CONT           {info["fuel"]["contingency"]}\n' \
+                   f'ALTN           {info["fuel"]["alternate_burn"]}\n' \
+                   f'FINRES         {info["fuel"]["reserve"]}\n' \
+                   f'EXTRA          {info["fuel"]["extra"]}\n' \
+                   f'TAXI           {info["fuel"]["taxi"]}\n' \
+                   f'BLOCK FUEL     {info["fuel"]["plan_ramp"]}\n'
 
-            payload = f"PAX         {info['weights']['pax_count']}\n" \
-                      f"CARGO       {round((int(info['weights']['cargo']) / 1000), 1)}\n" \
-                      f"PAYLOAD     {round((int(info['weights']['payload']) / 1000), 1)}\n" \
-                      f"ZFW         {round((int(info['weights']['est_zfw']) / 1000), 1)}\n" \
-                      f"FUEL        {round((int(info['fuel']['plan_ramp']) / 1000), 1)}\n" \
-                      f"TOW         {round((int(info['weights']['est_tow']) / 1000), 1)}\n" \
-                      f"LAW         {round((int(info['weights']['est_ldw']) / 1000), 1)}\n"
+            payload = f'PAX         {info["weights"]["pax_count"]}\n' \
+                      f'CARGO       {round((int(info["weights"]["cargo"]) / 1000), 1)}\n' \
+                      f'PAYLOAD     {round((int(info["weights"]["payload"]) / 1000), 1)}\n' \
+                      f'ZFW         {round((int(info["weights"]["est_zfw"]) / 1000), 1)}\n' \
+                      f'FUEL        {round((int(info["fuel"]["plan_ramp"]) / 1000), 1)}\n' \
+                      f'TOW         {round((int(info["weights"]["est_tow"]) / 1000), 1)}\n' \
+                      f'LAW         {round((int(info["weights"]["est_ldw"]) / 1000), 1)}\n'
             if toc:
-                general = f"Cost Index:         {info['general']['cruise_profile']}\n" \
-                          f"Route Distance:     {info['general']['route_distance']}nm\n" \
-                          f"Average Wind:       {info['general']['avg_wind_dir']}°/{info['general']['avg_wind_comp']}kt\n" \
-                          f"Aircraft:           {info['aircraft']['name']}\n" \
-                          f"Est. Time Enroute:  {round((int(info['times']['est_time_enroute']) / 3600), 2)}hrs\n" \
-                          f"TOC Conditions:     {info['navlog']['fix'][i]['wind_dir']}°/{info['navlog']['fix'][i]['wind_spd']}kt | OAT: {info['navlog']['fix'][i]['oat']} | ISA DEV: {info['navlog']['fix'][i]['oat_isa_dev']}\n"
+                general = f'Cost Index:         {info["general"]["cruise_profile"]}\n' \
+                          f'Route Distance:     {info["general"]["route_distance"]}nm\n' \
+                          f'Average Wind:       {info["general"]["avg_wind_dir"]}°/{info["general"]["avg_wind_comp"]}kt\n' \
+                          f'Aircraft:           {info["aircraft"]["name"]}\n' \
+                          f'Est. Time Enroute:  {round((int(info["times"]["est_time_enroute"]) / 3600), 2)}hrs\n' \
+                          f'TOC Conditions:     {info["navlog"]["fix"][i]["wind_dir"]}°/{info["navlog"]["fix"][i]["wind_spd"]}kt | OAT: {info["navlog"]["fix"][i]["oat"]} | ISA DEV: {info["navlog"]["fix"][i]["oat_isa_dev"]}\n'
             else:
-                general = f"Cost Index:         {info['general']['cruise_profile']}\n" \
-                          f"Route Distance:     {info['general']['route_distance']}\n" \
-                          f"Average Wind:       {info['general']['avg_wind_dir']}°/{info['general']['avg_wind_comp']}kt\n" \
-                          f"Aircraft:           {info['aircraft']['name']}\n" \
-                          f"Est. Time Enroute:  {info['times']['est_time_enroute']}\n"
+                general = f'Cost Index:         {info["general"]["cruise_profile"]}\n' \
+                          f'Route Distance:     {info["general"]["route_distance"]}\n' \
+                          f'Average Wind:       {info["general"]["avg_wind_dir"]}°/{info["general"]["avg_wind_comp"]}kt\n' \
+                          f'Aircraft:           {info["aircraft"]["name"]}\n' \
+                          f'Est. Time Enroute:  {info["times"]["est_time_enroute"]}\n'
 
             directory = info['files']['directory']
-            files = f"[X-Plane 11]({directory}{info['fms_downloads']['xpe']['link']}) | [MSFS 2020]({directory}{info['fms_downloads']['mfs']['link']}) | " \
-                    f"[FSX/P3D]({directory}{info['fms_downloads']['fsx']['link']}) | [PMDG]({directory}{info['fms_downloads']['pmr']['link']})"
+            files = f'[X-Plane 11]({directory}{info["fms_downloads"]["xpe"]["link"]}) | [MSFS 2020]({directory}{info["fms_downloads"]["mfs"]["link"]}) | ' \
+                    f'[FSX/P3D]({directory}{info["fms_downloads"]["fsx"]["link"]}) | [PMDG]({directory}{info["fms_downloads"]["pmr"]["link"]})'
 
             sb_embed = discord.Embed(
-                title=f"Retrieved SimBrief flight plan: **{info['origin']['icao_code']} → {info['destination']['icao_code']}**  ALTN: {info['alternate']['icao_code']}",
+                title=f'Retrieved SimBrief flight plan: **{info["origin"]["icao_code"]} → {info["destination"]["icao_code"]}**  ALTN: {info["alternate"]["icao_code"]}',
                 description=desc,
                 colour=discord.Colour.from_rgb(97, 0, 215)
             )

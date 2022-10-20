@@ -15,7 +15,7 @@ class Extra(commands.Cog):
     )
 
     help_embed.set_thumbnail(
-        url='https://cdn.discordapp.com/attachments/1013895628331417681/1022950931194720307/ezgif.com-gif-maker_14.gif')
+        url='https://cdn.discordapp.com/attachments/736887056344678441/1032479805016375356/ezgif.com-gif-maker_8.gif')
     help_embed.set_footer(text='You can also access these commands by tagging the bot, such as @BravoOscarTango help')
     # help_embed.add_field(name=f'/flight-commands :airplane_departure:', value='List of flight sim commands',
     #                      inline=False),
@@ -38,7 +38,7 @@ class Extra(commands.Cog):
     fun_embed.set_footer(
         text=f'You can also access these commands by tagging the bot, such as @BravoOscarTango help')
     fun_embed.set_thumbnail(
-        url='https://cdn.discordapp.com/attachments/1013895628331417681/1022950931194720307/ezgif.com-gif-maker_14.gif')
+        url='https://cdn.discordapp.com/attachments/736887056344678441/1032479805016375356/ezgif.com-gif-maker_8.gif')
     fun_embed.add_field(name=f'/markov',
                         value='Generates a sentence based on the Communist Manifesto :)', inline=False)
     fun_embed.add_field(name=f'/garloc',
@@ -55,7 +55,7 @@ class Extra(commands.Cog):
     mod_embed.set_footer(
         text=f'[*Only accessible via mentioning command] You can also access these commands by tagging the bot, such as @BravoOscarTango help')
     mod_embed.set_thumbnail(
-        url='https://cdn.discordapp.com/attachments/1013895628331417681/1022950931194720307/ezgif.com-gif-maker_14.gif')
+        url='https://cdn.discordapp.com/attachments/736887056344678441/1032479805016375356/ezgif.com-gif-maker_8.gif')
     mod_embed.add_field(name=f'/clear [amount][reason]',
                         value='Clears messages, 1 by default, default reason is None', inline=False)
     mod_embed.add_field(name=f'ban* [member][reason]', value='Bans a member, default reason is None', inline=False)
@@ -76,7 +76,7 @@ class Extra(commands.Cog):
     fs_embed.set_footer(
         text=f'You can also access these commands by tagging the bot, such as @BravoOscarTango help')
     fs_embed.set_thumbnail(
-        url='https://cdn.discordapp.com/attachments/1013895628331417681/1022950931194720307/ezgif.com-gif-maker_14.gif')
+        url='https://cdn.discordapp.com/attachments/736887056344678441/1032479805016375356/ezgif.com-gif-maker_8.gif')
     fs_embed.add_field(name=f'/flight [Flight number]', value="Shows info for a live flight, or a list of past/scheduled flights if it's not currently live. Flight number is NOT the callsign (eg. FR1234 instead of RYR1234)",
                        inline=False)
     fs_embed.add_field(name=f'/metar [ICAO]', value='Fetches METAR for given airport ICAO',
@@ -103,7 +103,7 @@ class Extra(commands.Cog):
     ex_embed.set_footer(
         text=f'You can also access these commands by tagging the bot, such as @BravoOscarTango help')
     ex_embed.set_thumbnail(
-        url='https://cdn.discordapp.com/attachments/1013895628331417681/1022950931194720307/ezgif.com-gif-maker_14.gif')
+        url='https://cdn.discordapp.com/attachments/736887056344678441/1032479805016375356/ezgif.com-gif-maker_8.gif')
     ex_embed.add_field(name=f'/gif [GIF search query]',
                        value='[Tenor] Searches and posts a GIF based on the given query', inline=False)
     ex_embed.add_field(name=f'/pic [Image search query]',
