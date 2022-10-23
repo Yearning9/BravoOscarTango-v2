@@ -6,11 +6,40 @@ import discord
 import staticmaps
 from PIL import ImageFile
 from discord import app_commands
-
+from FlightRadar24.api import FlightRadar24API
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 
 
 fr = flightradar24.Api()
+fr_sec = FlightRadar24API()
+
+def line_color(alt):
+    if alt < 11:
+        return staticmaps.WHITE
+    elif alt < 2000:
+        r = 255 - int((alt * 255) / 2000)
+        return staticmaps.Color(r, 255, 0)
+    elif alt < 10500:
+        alt = alt - 2000
+        b = int((alt * 255) / 8500)
+        return staticmaps.Color(0, 255, b)
+    elif alt < 21000:
+        alt = alt - 10500
+        g = 255 - int((alt * 255) / 10500)
+        return staticmaps.Color(0, g, 255)
+    elif alt < 38000:
+        alt = alt - 21000
+        r = int((alt * 255) / 17000)
+        return staticmaps.Color(r, 0, 255)
+    elif alt < 43000:
+        alt = alt - 38000
+        b = 255 - int((alt * 255) / 5000)
+        return staticmaps.Color(255, 0, b)
+    elif 43000 <= alt < 100000:
+        return staticmaps.RED
+    else:
+        return staticmaps.WHITE
+
 
 
 class Radar(commands.Cog):
@@ -103,25 +132,58 @@ class Radar(commands.Cog):
 
             dep = None
             arr = None
+            found = False
 
             if origin != 'N/A':
                 lat1 = data[j]["airport"]["origin"]["position"]["latitude"]
                 long1 = data[j]["airport"]["origin"]["position"]["longitude"]
                 dep = staticmaps.create_latlng(lat1, long1)
-                sm.add_object((staticmaps.ImageMarker(dep, './Utils/tkof.png', 36, 36)))
+                sm.add_object((staticmaps.ImageMarker(dep, './Utils/Radar/tkof.png', 19, 36)))
             if destination != 'N/A':
                 lat2 = data[j]["airport"]["destination"]["position"]["latitude"]
                 long2 = data[j]["airport"]["destination"]["position"]["longitude"]
                 arr = staticmaps.create_latlng(lat2, long2)
-                sm.add_object((staticmaps.ImageMarker(arr, './Utils/ldg.png', 36, 36)))
+                sm.add_object((staticmaps.ImageMarker(arr, './Utils/Radar/ldg.png', 19, 36)))
 
-            if dep is not None and arr is not None:
-                sm.add_object(staticmaps.Line([dep, arr], color=staticmaps.BLUE, width=3))
-                image = sm.render_cairo(400, 400)
-                sm.set_center(dep)
-                sm.set_zoom(13)
+            trail = {}
+
+            if airline_icao is not None and registration is not None:
+                airline_req = fr_sec.get_flights(airline=airline_icao)
+                airline_input = str(airline_req).split(',')
+                z = 0
+                pos = None
+                trail = None
+                hdg = 0
+                while z < len(airline_input):
+                    if registration in airline_input[z]:
+                        plane_req = airline_req[z]
+                        detes = fr_sec.get_flight_details(plane_req.id)
+                        found = True
+                        trail = detes['trail']
+                        hdg = int(trail[0]['hd'] / 10)
+                        pos = staticmaps.create_latlng(trail[0]['lat'], trail[0]['lng'])
+                        break
+                    else:
+                        z += 1
+                if found:
+                    q = 0
+                    while q < len(trail) - 1:
+                        tr1 = staticmaps.create_latlng(trail[q]['lat'], trail[q]['lng'])
+                        tr2 = staticmaps.create_latlng(trail[q+1]['lat'], trail[q+1]['lng'])
+                        alt = trail[q]['alt']
+                        sm.add_object(staticmaps.Line([tr1, tr2], color=line_color(alt), width=3))
+                        q += 1
+                    sm.add_object(staticmaps.ImageMarker(pos, f'./Utils/Radar/plane{hdg}.png', 18, 18))
+                else:
+                    if dep is not None and arr is not None:
+                        sm.add_object(staticmaps.Line([dep, arr], color=staticmaps.BLUE, width=3))
+            else:
+                if dep is not None and arr is not None:
+                    sm.add_object(staticmaps.Line([dep, arr], color=staticmaps.BLUE, width=3))
+
+            if dep is not None or arr is not None or found is True:
+                image = sm.render_cairo(400, 400)   # TODO: check
                 image.write_to_png('./Utils/map.png')
-
                 file = discord.File('Utils/map.png')
             else:
                 file = None
@@ -129,21 +191,40 @@ class Radar(commands.Cog):
             # if airline == 'Vueling':
             #     airline = 'Vuling'
 
-            live_flight = discord.Embed(
-                title='{} [{} | {}]'.format(airline, query, callsign),
-                description=f'Status: **:{st_color}_circle: {status}**',
-                colour=discord.Colour.from_rgb(97, 0, 215)
-            )
+            if found:
+
+                spd = trail[0]['spd']
+
+                live_alt = trail[0]['alt']
+                if live_alt >= 10000:
+                    live_alt = f'FL{int(live_alt / 100)}'
+                else:
+                    live_alt = f'{live_alt} ft'
+
+                live_flight = discord.Embed(
+                    title=f'{airline} [{query} | {callsign}]',
+                    description=f'Status: **:{st_color}_circle: {status}**\n'
+                                f'Altitude: **{live_alt}**\n'
+                                f'Ground Speed: **{spd} kts**',
+                    color=discord.Colour.from_rgb(97, 0, 215)
+                )
+
+            else:
+
+                live_flight = discord.Embed(
+                    title='{} [{} | {}]'.format(airline, query, callsign),
+                    description=f'Status: **:{st_color}_circle: {status}**',
+                    colour=discord.Colour.from_rgb(97, 0, 215)
+                )
             live_flight.set_thumbnail(url=plane_pic)
             live_flight.set_footer(text=cr)
             live_flight.add_field(name='Aircraft type:', value=plane)
             live_flight.add_field(name='Registration:', value=':flag_{}: | {}'.format(flag, registration))
             live_flight.add_field(name='Origin Airport:', value=f'{origin_ver} - {origin}/{origin_iata}', inline=False)
             live_flight.add_field(name='Arrival Airport:', value=f'{dest_ver} - {destination}/{dest_iata}')
-            live_flight.add_field(name='Scheduled|Actual Departure (UTC):', value='{} | {}'.format(sched1, act),
+            live_flight.add_field(name='Scheduled | Actual Departure (UTC):', value='{} | {}'.format(sched1, act),
                                   inline=False)
-            live_flight.add_field(name='Scheduled|Estimated Arrival (UTC):', value='{} | {}'.format(sched2, eta),
-                                  inline=True)
+            live_flight.add_field(name='Scheduled | Estimated Arrival (UTC):', value='{} | {}'.format(sched2, eta))
             live_flight.set_image(url='attachment://map.png')
             await ctx.send(embed=live_flight, file=file)
             # if airline == 'Vuling':
