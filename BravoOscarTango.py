@@ -3,15 +3,14 @@ import discord
 import os
 from discord.ext import commands
 from discord.ext.commands import NotOwner, CommandNotFound, NoPrivateMessage
+import logging
 
+logging.basicConfig(level=logging.INFO, filename='botlog.log', filemode='a', format='%(asctime)s | %(message)s', datefmt='%d-%b-%y %H:%M:%S')
 
 intents = discord.Intents.default()
 
-# intents.message_content = True
-
 
 client = commands.Bot(command_prefix=commands.when_mentioned, intents=intents)
-# client = commands.Bot(command_prefix='.', intents=intents)  # let's call this an emergency measure for prefixes
 
 client.remove_command("help")
 
@@ -79,6 +78,11 @@ async def sync(ctx, guild=None):
         print(f'done to guild {guild}')
         return await ctx.send(f'Synced to {guild}')
 
+# Logging
+
+@client.event
+async def on_command_completion(ctx):
+    logging.info(f'Used {ctx.command.name}')
 
 # Error Handling
 
@@ -93,6 +97,7 @@ async def on_command_error(ctx, error):
         await ctx.send(f'Command does not exist, check /help for a list of commands')
     else:
         print(error)
+        logging.error(f'ERROR | {error}')
 
 @test.error
 async def test_error(ctx, error):
