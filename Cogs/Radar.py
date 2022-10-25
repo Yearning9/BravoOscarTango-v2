@@ -146,25 +146,51 @@ class Radar(commands.Cog):
                 sm.add_object((staticmaps.ImageMarker(arr, './Utils/Radar/ldg.png', 19, 36)))
 
             trail = {}
+            sent = None
+
+            live_flight = discord.Embed(
+                title='{} [{} | {}]'.format(airline, query, callsign),
+                description=f'Status: **:{st_color}_circle: {status}**',
+                colour=discord.Colour.from_rgb(97, 0, 215)
+            )
+
+            live_flight.set_thumbnail(url=plane_pic)
+            live_flight.set_footer(text=cr)
+            live_flight.add_field(name='Aircraft type:', value=plane)
+            live_flight.add_field(name='Registration:', value=':flag_{}: | {}'.format(flag, registration))
+            live_flight.add_field(name='Origin Airport:', value=f'{origin_ver} - {origin}/{origin_iata}', inline=False)
+            live_flight.add_field(name='Arrival Airport:', value=f'{dest_ver} - {destination}/{dest_iata}')
+            live_flight.add_field(name='Scheduled | Actual Departure (UTC):', value='{} | {}'.format(sched1, act),
+                                  inline=False)
+            live_flight.add_field(name='Scheduled | Estimated Arrival (UTC):', value='{} | {}'.format(sched2, eta))
 
             if airline_icao is not None and registration is not None:
+
+                live_flight.set_image(url='https://media.discordapp.net/attachments/736887056344678441/1034525783173115934/loading.gif')
+                sent = await ctx.send(embed=live_flight)
                 airline_req = fr_sec.get_flights(airline=airline_icao)
                 airline_input = str(airline_req).split(',')
                 z = 0
                 pos = None
                 trail = None
                 hdg = 0
+
                 while z < len(airline_input):
                     if registration in airline_input[z]:
-                        plane_req = airline_req[z]
-                        detes = fr_sec.get_flight_details(plane_req.id)
-                        found = True
-                        trail = detes['trail']
-                        hdg = int(trail[0]['hd'] / 10)
-                        pos = staticmaps.create_latlng(trail[0]['lat'], trail[0]['lng'])
-                        break
+                        try:
+                            plane_req = airline_req[z]
+                            detes = fr_sec.get_flight_details(plane_req.id)
+                            found = True
+                            trail = detes['trail']
+                            hdg = int(trail[0]['hd'] / 10)
+                            pos = staticmaps.create_latlng(trail[0]['lat'], trail[0]['lng'])
+                            break
+                        except TypeError:
+                            found = False
+                            break
                     else:
                         z += 1
+
                 if found:
                     q = 0
                     while q < len(trail) - 1:
@@ -177,12 +203,13 @@ class Radar(commands.Cog):
                 else:
                     if dep is not None and arr is not None:
                         sm.add_object(staticmaps.Line([dep, arr], color=staticmaps.BLUE, width=3))
+
             else:
                 if dep is not None and arr is not None:
                     sm.add_object(staticmaps.Line([dep, arr], color=staticmaps.BLUE, width=3))
 
             if dep is not None or arr is not None or found is True:
-                image = sm.render_cairo(400, 400)   # TODO: check
+                image = sm.render_cairo(600, 400)
                 image.write_to_png('./Utils/map.png')
                 file = discord.File('Utils/map.png')
             else:
@@ -196,35 +223,17 @@ class Radar(commands.Cog):
                 spd = trail[0]['spd']
 
                 live_alt = trail[0]['alt']
+
                 if live_alt >= 10000:
                     live_alt = f'FL{int(live_alt / 100)}'
                 else:
                     live_alt = f'{live_alt} ft'
 
-                live_flight = discord.Embed(
-                    title=f'{airline} [{query} | {callsign}]',
-                    description=f'Status: **:{st_color}_circle: {status}**\n'
-                                f'Altitude: **{live_alt}**\n'
-                                f'Ground Speed: **{spd} kts**',
-                    color=discord.Colour.from_rgb(97, 0, 215)
-                )
+                live_flight.description += f'\nAltitude: **{live_alt}**\nGround Speed: **{spd} kts**'
+                live_flight.set_image(url='attachment://map.png')
 
-            else:
+                return await sent.edit(embed=live_flight, attachments=[file])
 
-                live_flight = discord.Embed(
-                    title='{} [{} | {}]'.format(airline, query, callsign),
-                    description=f'Status: **:{st_color}_circle: {status}**',
-                    colour=discord.Colour.from_rgb(97, 0, 215)
-                )
-            live_flight.set_thumbnail(url=plane_pic)
-            live_flight.set_footer(text=cr)
-            live_flight.add_field(name='Aircraft type:', value=plane)
-            live_flight.add_field(name='Registration:', value=':flag_{}: | {}'.format(flag, registration))
-            live_flight.add_field(name='Origin Airport:', value=f'{origin_ver} - {origin}/{origin_iata}', inline=False)
-            live_flight.add_field(name='Arrival Airport:', value=f'{dest_ver} - {destination}/{dest_iata}')
-            live_flight.add_field(name='Scheduled | Actual Departure (UTC):', value='{} | {}'.format(sched1, act),
-                                  inline=False)
-            live_flight.add_field(name='Scheduled | Estimated Arrival (UTC):', value='{} | {}'.format(sched2, eta))
             live_flight.set_image(url='attachment://map.png')
             await ctx.send(embed=live_flight, file=file)
             # if airline == 'Vuling':
