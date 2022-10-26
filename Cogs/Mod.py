@@ -175,7 +175,7 @@ class Mod(commands.Cog):
             time.sleep(1)
             await interaction.response.send_message(f'Deleted {amount} message(s) with reason:\n`{reason}`')
 
-        except discord.app_commands.MissingPermissions or discord.app_commands.BotMissingPermissions:
+        except discord.app_commands.MissingPermissions or discord.app_commands.BotMissingPermissions or discord.errors.Forbidden:
             await interaction.response.send_message(
                 "Permissions error! Check that both you and the bot have the Manage Messages permission",
                 ephemeral=True)
