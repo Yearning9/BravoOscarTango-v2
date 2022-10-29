@@ -5,7 +5,6 @@ from discord.ext.commands import MissingPermissions, BotMissingPermissions
 from discord.ext.commands import MissingRequiredArgument, MemberNotFound, BadArgument
 from datetime import timedelta
 import math
-import time
 
 
 class Mod(commands.Cog):
@@ -172,11 +171,10 @@ class Mod(commands.Cog):
         try:
             await interaction.response.defer(thinking=True)
             await interaction.channel.purge(limit=amount + 1, reason=str(reason))
-            time.sleep(1)
-            await interaction.response.send_message(f'Deleted {amount} message(s) with reason:\n`{reason}`')
+            return await interaction.channel.send(f'Deleted {amount} message(s) with reason:\n`{reason}`', delete_after=10)
 
         except discord.app_commands.MissingPermissions or discord.app_commands.BotMissingPermissions or discord.errors.Forbidden:
-            await interaction.response.send_message(
+            return await interaction.channel.send(
                 "Permissions error! Check that both you and the bot have the Manage Messages permission",
                 ephemeral=True)
 
