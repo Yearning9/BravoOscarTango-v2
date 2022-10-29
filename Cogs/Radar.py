@@ -1,12 +1,14 @@
 import flightradar24
 from discord.ext import commands
-from datetime import datetime
+from datetime import datetime, timedelta
 import json
 import discord
 import staticmaps
 from PIL import ImageFile
 from discord import app_commands
 from FlightRadar24.api import FlightRadar24API
+import matplotlib.pyplot as plt
+from matplotlib.dates import DateFormatter
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 
 
@@ -40,13 +42,12 @@ def line_color(alt):
     else:
         return staticmaps.WHITE
 
-
-
 class Radar(commands.Cog):
 
     @commands.hybrid_command(name='flight', description="Shows info for a live flight, or a list of past/scheduled flights if it's not currently live")
     @app_commands.describe(flight_id='Flight number')
-    async def flight(self, ctx, flight_id):
+    @app_commands.choices(image=[app_commands.Choice(name='🗺 Map', value='map'), app_commands.Choice(name='📈 Graph', value='graph')])
+    async def flight(self, ctx, flight_id, image: app_commands.Choice[str] = 'map'):
 
         await ctx.defer()
 
@@ -57,6 +58,7 @@ class Radar(commands.Cog):
 
         json_str = json.dumps(flight)
         flight_data = json.loads(json_str)
+
         # with open('./Utils/fr24.json', 'w') as f:
         #     json.dump(flight, f, indent=4)
         data = flight_data["result"]["response"]["data"]
@@ -134,12 +136,12 @@ class Radar(commands.Cog):
             arr = None
             found = False
 
-            if origin != 'N/A':
+            if origin != 'N/A' and image == 'map':
                 lat1 = data[j]["airport"]["origin"]["position"]["latitude"]
                 long1 = data[j]["airport"]["origin"]["position"]["longitude"]
                 dep = staticmaps.create_latlng(lat1, long1)
                 sm.add_object((staticmaps.ImageMarker(dep, './Utils/Radar/tkof.png', 19, 36)))
-            if destination != 'N/A':
+            if destination != 'N/A' and image == 'map':
                 lat2 = data[j]["airport"]["destination"]["position"]["latitude"]
                 long2 = data[j]["airport"]["destination"]["position"]["longitude"]
                 arr = staticmaps.create_latlng(lat2, long2)
@@ -147,6 +149,9 @@ class Radar(commands.Cog):
 
             trail = {}
             sent = None
+            ts_list = []
+            spd_list = []
+            alt_list = []
 
             live_flight = discord.Embed(
                 title='{} [{} | {}]'.format(airline, query, callsign),
@@ -174,6 +179,9 @@ class Radar(commands.Cog):
                 pos = None
                 trail = None
                 hdg = 0
+                alt_list = []
+                spd_list = []
+                ts_list = []
 
                 while z < len(airline_input):
                     if registration in airline_input[z]:
@@ -182,10 +190,11 @@ class Radar(commands.Cog):
                             detes = fr_sec.get_flight_details(plane_req.id)
                             found = True
                             trail = detes['trail']
-                            hdg = int(trail[0]['hd'] / 10)
-                            pos = staticmaps.create_latlng(trail[0]['lat'], trail[0]['lng'])
+                            if image == 'map':
+                                hdg = int(trail[0]['hd'] / 10)
+                                pos = staticmaps.create_latlng(trail[0]['lat'], trail[0]['lng'])
                             break
-                        except TypeError:
+                        except TypeError or json.JSONDecodeError:
                             found = False
                             break
                     else:
@@ -193,25 +202,58 @@ class Radar(commands.Cog):
 
                 if found:
                     q = 0
-                    while q < len(trail) - 1:
-                        tr1 = staticmaps.create_latlng(trail[q]['lat'], trail[q]['lng'])
-                        tr2 = staticmaps.create_latlng(trail[q+1]['lat'], trail[q+1]['lng'])
-                        alt = trail[q]['alt']
-                        sm.add_object(staticmaps.Line([tr1, tr2], color=line_color(alt), width=3))
-                        q += 1
-                    sm.add_object(staticmaps.ImageMarker(pos, f'./Utils/Radar/plane{hdg}.png', 18, 18))
-                else:
-                    if dep is not None and arr is not None:
-                        sm.add_object(staticmaps.Line([dep, arr], color=staticmaps.BLUE, width=3))
+                    if image == 'map':
+                        while q < len(trail) - 1:
+                            tr1 = staticmaps.create_latlng(trail[q]['lat'], trail[q]['lng'])
+                            tr2 = staticmaps.create_latlng(trail[q+1]['lat'], trail[q+1]['lng'])
+                            alt = trail[q]['alt']
+                            sm.add_object(staticmaps.Line([tr1, tr2], color=line_color(alt), width=3))
+                            q += 1
+                        sm.add_object(staticmaps.ImageMarker(pos, f'./Utils/Radar/plane{hdg}.png', 18, 18))
 
-            else:
-                if dep is not None and arr is not None:
+                    elif image.value == 'graph':
+                        while q < len(trail) - 1:
+                            alt_list.append(trail[q]['alt'])
+                            spd_list.append(trail[q]['spd'])
+                            ts_list.append(datetime.fromtimestamp(trail[q]['ts']) - timedelta(hours=2))
+                            q += 1
+
+                elif dep is not None and arr is not None and image == 'map':
                     sm.add_object(staticmaps.Line([dep, arr], color=staticmaps.BLUE, width=3))
 
-            if dep is not None or arr is not None or found is True:
-                image = sm.render_cairo(600, 400)
-                image.write_to_png('./Utils/map.png')
+
+            elif dep is not None and arr is not None and image == 'map':
+                sm.add_object(staticmaps.Line([dep, arr], color=staticmaps.BLUE, width=3))
+
+
+            if dep is not None or arr is not None or found is True and image == 'map':
+                image_map = sm.render_cairo(600, 400)
+                image_map.write_to_png('./Utils/map.png')
                 file = discord.File('Utils/map.png')
+                live_flight.set_image(url='attachment://map.png')
+            elif image.value == 'graph':
+                fig, ax1 = plt.subplots()
+                ax1.set_xlabel('Time (UTC)')
+                ax1.set_ylabel('Altitude (ft)')
+                ax1.plot(ts_list, alt_list)
+                ax1.tick_params(axis='y', labelcolor='blue')
+                plt.gca().xaxis.set_major_formatter(DateFormatter('%H:%M'))
+
+                ax1.set_facecolor('#2f3136')
+
+                ax1.set_title(f'{query.upper()} Speed and Altitude graph')
+                ax1.grid(True)
+
+                ax2 = ax1.twinx()
+                ax2.set_ylabel('Ground speed (kt)')
+                ax2.plot(ts_list, spd_list, color='orange')
+                ax2.tick_params(axis='y', labelcolor='orange')
+
+
+                plt.savefig('Utils/plot.png')
+
+                file = discord.File('Utils/plot.png')
+                live_flight.set_image(url='attachment://plot.png')
             else:
                 file = None
 
@@ -230,7 +272,6 @@ class Radar(commands.Cog):
                     live_alt = f'{live_alt} ft'
 
                 live_flight.description += f'\nAltitude: **{live_alt}**\nGround Speed: **{spd} kts**'
-                live_flight.set_image(url='attachment://map.png')
 
                 return await sent.edit(embed=live_flight, attachments=[file])
 

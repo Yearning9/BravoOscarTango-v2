@@ -77,7 +77,7 @@ class Extra(commands.Cog):
         text=f'You can also access these commands by tagging the bot, such as @BravoOscarTango help')
     fs_embed.set_thumbnail(
         url='https://cdn.discordapp.com/attachments/736887056344678441/1032479805016375356/ezgif.com-gif-maker_8.gif')
-    fs_embed.add_field(name=f'/flight [Flight number]', value="Shows info for a live flight, or a list of past/scheduled flights if it's not currently live. Flight number is NOT the callsign (eg. FR1234 instead of RYR1234)",
+    fs_embed.add_field(name=f'/flight [Flight number][Image type (either live map or alt/speed graph)]', value="Shows info for a live flight, or a list of past/scheduled flights if it's not currently live. Flight number is NOT the callsign (eg. FR1234 instead of RYR1234)",
                        inline=False)
     fs_embed.add_field(name=f'/metar [ICAO]', value='Fetches METAR for given airport ICAO',
                        inline=False)
