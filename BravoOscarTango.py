@@ -1,4 +1,7 @@
 import asyncio
+import sys
+import traceback
+
 import discord
 import os
 from discord.ext import commands
@@ -93,10 +96,17 @@ async def test_error(ctx, error):
 
 @client.event
 async def on_command_error(ctx, error):
-    if isinstance(error, CommandNotFound):
+
+    if isinstance(error, commands.NoPrivateMessage):
+        try:
+            await ctx.author.send(f'{ctx.command} can not be used in Private Messages.')
+        except discord.HTTPException:
+            pass
+
+    elif isinstance(error, CommandNotFound):
         await ctx.send(f'Command does not exist, check /help for a list of commands')
     else:
-        print(error)
+        print('Ignoring exception in command {}:'.format(ctx.command), file=sys.stderr)
         logging.error(f'ERROR | {error}')
 
 @test.error
