@@ -173,10 +173,16 @@ class Mod(commands.Cog):
             await interaction.channel.purge(limit=amount + 1, reason=str(reason))
             return await interaction.channel.send(f'Deleted {amount} message(s) with reason:\n`{reason}`', delete_after=10)
 
-        except discord.app_commands.MissingPermissions or discord.app_commands.BotMissingPermissions or discord.errors.Forbidden:
-            return await interaction.channel.send(
-                "Permissions error! Check that both you and the bot have the Manage Messages permission",
-                ephemeral=True)
+        except discord.app_commands.MissingPermissions or discord.app_commands.BotMissingPermissions or discord.errors.Forbidden or discord.RateLimited:
+
+            if discord.RateLimited:
+                return await interaction.channel.send("Rate limited! Please wait before reusing this command",
+                                                      ephemeral=True)
+            else:
+
+                return await interaction.channel.send(
+                    "Permissions error! Check that both you and the bot have the Manage Messages permission",
+                    ephemeral=True)
 
     # @app_commands.command(name='timeout',
     #                       description='Time out a user for a set amount of time, or remove timeout for a user')

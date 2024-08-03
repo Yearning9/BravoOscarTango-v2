@@ -90,8 +90,19 @@ class FlightSim(commands.Cog):
             temp = resp["data"][0]["temperature"]["celsius"]
             dew = resp["data"][0]["dewpoint"]["celsius"]
             humidity = resp["data"][0]["humidity"]["percent"]
-            inhg = resp["data"][0]["barometer"]["hg"]
-            hpa = resp["data"][0]["barometer"]["hpa"]
+            if resp["data"][0]["barometer"] != {}:
+                if ["hg"] in resp["data"][0]["barometer"]:
+                    inhg = resp["data"][0]["barometer"]["hg"]
+                else:
+                    inhg = "N/A"
+                if ["hpa"] in resp["data"][0]["barometer"]:
+                    hpa = resp["data"][0]["barometer"]["hpa"]
+                else:
+                    hpa = "N/A"
+            else:
+                inhg = "N/A"
+                hpa = "N/A"
+
             obs = resp["data"][0]["observed"]
             cond = resp["data"][0]["flight_category"]
             raw = resp["data"][0]["raw_text"]
@@ -157,7 +168,7 @@ class FlightSim(commands.Cog):
 
             if layerint == 1:
                 clouds = resp["data"][0]["clouds"][0]["text"]
-                if 'feet' in resp["data"][0]["clouds"][0]:
+                if resp["data"][0]["clouds"][0] != {} and 'feet' in resp["data"][0]["clouds"][0]:
                     clofeet = resp["data"][0]["clouds"][0]["feet"]
                     metar.add_field(name="Cloud condition:", value="{}ft {}".format(clofeet, clouds))
                 else:
@@ -277,10 +288,16 @@ class FlightSim(commands.Cog):
                 mention_author=False)
 
         if response.status_code != 201:
-            await ctx.send(
-                f"Error {response.status_code} while generating the flight plan, try with different ICAO codes\n```{response.json()['errors'][0]['message']}```")
-            self.flightplan.reset_cooldown(ctx)
-            return
+            if response.status_code == 400:
+                await ctx.send(
+                    f"Error {response.status_code} while generating the flight plan, try with different ICAO codes.\n**NOTE:** if you're still getting this error code after checking your ICAO codes, it probably means the flightplandatabase API is currently broken. Please try again later or get in touch with the support server (/support).\n```{response.json()['errors'][0]['message']}```")
+                self.flightplan.reset_cooldown(ctx)
+                return
+            else:
+                await ctx.send(
+                    f"Error {response.status_code} while generating the flight plan, try with different ICAO codes.\n```{response.json()['errors'][0]['message']}```")
+                self.flightplan.reset_cooldown(ctx)
+                return
 
         plan = (str(response.json()))[7:14]
 
@@ -717,12 +734,13 @@ class FlightSim(commands.Cog):
             i = 0
             toc = False
 
-            for _ in info:
-                if info['navlog']['fix'][i]['name'] == 'TOP OF CLIMB':
-                    toc = True
-                    break
-                else:
-                    i += 1
+            if info['navlog']['fix'] is not None and info['navlog']['fix'] != {}:
+                for _ in info:
+                    if info['navlog']['fix'][i]['name'] == 'TOP OF CLIMB':
+                        toc = True
+                        break
+                    else:
+                        i += 1
 
             desc = f'Generated at: **{datetime.datetime.fromtimestamp(int(info["params"]["time_generated"])).strftime("%H:%M %Y-%m-%d")}**  | AIRAC: **{info["params"]["airac"]}** | Units: **{info["params"]["units"]}**\n\n' \
                    f'FL STEPS: **{info["general"]["stepclimb_string"]}**\n\n' \
@@ -761,8 +779,14 @@ class FlightSim(commands.Cog):
             files = f'[X-Plane 11]({directory}{info["fms_downloads"]["xpe"]["link"]}) | [MSFS 2020]({directory}{info["fms_downloads"]["mfs"]["link"]}) | ' \
                     f'[FSX/P3D]({directory}{info["fms_downloads"]["fsx"]["link"]}) | [PMDG]({directory}{info["fms_downloads"]["pmr"]["link"]})'
 
+            if info["alternate"] != {}:
+                print("yea")
+                altn = info["alternate"]["icao_code"]
+            else:
+                altn = "NONE"
+
             sb_embed = discord.Embed(
-                title=f'Retrieved SimBrief flight plan: **{info["origin"]["icao_code"]} → {info["destination"]["icao_code"]}**  ALTN: {info["alternate"]["icao_code"]}',
+                title=f'Retrieved SimBrief flight plan: **{info["origin"]["icao_code"]} → {info["destination"]["icao_code"]}**  ALTN: {altn}',
                 description=desc,
                 colour=discord.Colour.from_rgb(97, 0, 215)
             )

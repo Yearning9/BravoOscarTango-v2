@@ -61,7 +61,9 @@ class Radar(commands.Cog):
 
         # with open('./Utils/fr24.json', 'w') as f:
         #     json.dump(flight, f, indent=4)
-        data = flight_data["result"]["response"]["data"]
+        data = None
+        if flight_data["result"] is not None and flight_data["result"] != {}:
+            data = flight_data["result"]["response"]["data"]
         if data is None:
             return await ctx.reply('No flight was found for that flight number', mention_author=False)
         airline = data[0]["airline"]["name"]
@@ -215,7 +217,7 @@ class Radar(commands.Cog):
                         while q < len(trail) - 1:
                             alt_list.append(trail[q]['alt'])
                             spd_list.append(trail[q]['spd'])
-                            ts_list.append(datetime.fromtimestamp(trail[q]['ts']) - timedelta(hours=2))
+                            ts_list.append(datetime.fromtimestamp(trail[q]['ts']) - timedelta(hours=1))
                             q += 1
 
                 elif dep is not None and arr is not None and image == 'map':
